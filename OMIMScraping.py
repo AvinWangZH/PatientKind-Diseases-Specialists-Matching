@@ -1,11 +1,14 @@
 from urllib.request import urlopen
-import json
-import logging
-import re
 from collections import Counter
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
+import numpy as np
+import logging
+import json
+import csv
+import re
+import os
+
 
 
 def omim_page_scraping(start_num, limit):
@@ -105,7 +108,13 @@ def rearrange_omim_info():
     return
 
 def journal_date_parse(string):
+    '''
+    This function is used to parse the journal date form a string.
+    The string normally has the format of [JournalName] ##, ###, [Year_of_Publication]
     
+    input: a string
+    output: a two-element list [journalName, year] 
+    '''
     source_re = re.compile(r'((?:[a-zA-Z]+\s+)+).+(\d{4}).*')
     match = source_re.match(string)
     journal_list = []
@@ -116,14 +125,17 @@ def journal_date_parse(string):
         journal_list.append(date)
     return journal_list
 
-if __name__ == '__main__':
-    
+def get_journal_dist():
+    '''
+    This function is used to get the districution of journal names.
+    input: None
+    output: journal_distribution: a Counter object with sorted journal data
+    '''
     
     with open('omim_full_dict.json', 'r') as file:
         omim_dict = json.load(file)
         
     journal_list = []
-    date_list = []
     
     for omim in omim_dict:
         for pub in omim_dict[omim]['pubList']:
@@ -131,59 +143,111 @@ if __name__ == '__main__':
             journal = journal_date_parse(omim_dict[omim]['pubList'][pub]['journal'])
             if journal:
                 journal_list.append(journal[0])
-                date_list.append(journal[1])
                 
     journal_distribution = Counter(journal_list)
-    date_distribution = Counter(date_list)
     
-    date_array = []
-    for date in date_distribution:
-        date_array.append(date)
+    return journal_distribution
+
+
+def get_date_dist():
+    '''
+    This function is used to get the districution of publication years.
+    input: None
+    output: date_distribution: a Counter object with sorted year data
+    '''
     
-    date_array = sorted(date_array)
-    date = np.array(date_array)
+    with open('omim_full_dict.json', 'r') as file:
+        omim_dict = json.load(file)
+        
+    date_list = []
     
-    suffix_list = ['Jr.', 'I', 'II', 'III']
-    
-    count = 0
-    count1 = 0
-    
-    
-    #Testing code
     for omim in omim_dict:
         for pub in omim_dict[omim]['pubList']:
-            count1 += 1
-            #print(len(omim_dict[omim]['pubList'][pub]['authors']))
-            if len(omim_dict[omim]['pubList'][pub]['authors']) % 2 != 0:
-                if 'Jr.' not in omim_dict[omim]['pubList'][pub]['authors']:
-                    if 'III' not in omim_dict[omim]['pubList'][pub]['authors']:
-                        if 'II' not in omim_dict[omim]['pubList'][pub]['authors']:
-                            if 'IV' not in omim_dict[omim]['pubList'][pub]['authors']:
-                                if len(omim_dict[omim]['pubList'][pub]['authors']) != 1:
-                                    flag = 0
-                                    for element in omim_dict[omim]['pubList'][pub]['authors']:
-                                        if '{' in element:
-                                            flag = 1
-                                            break
-                                    if not flag:
-                                        count += 1
-                                        print(omim_dict[omim]['pubList'][pub]['authors'])    
-    
-    
-    
-    
-    
+            journal = []
+            journal = journal_date_parse(omim_dict[omim]['pubList'][pub]['journal'])
+            if journal:
+                date_list.append(journal[1])
                 
+    date_distribution = Counter(date_list)
+    
+    #Comment: get date array
+    
+    #date_array = []
+    #for date in date_distribution:
+        #date_array.append(date)
+    
+    #date_array = sorted(date_array)
+    #date = np.array(date_array)    
+    
+    return date_distribution
+    
 
+def get_name_dist():
+    
+    name_list = []
+    suffix_list = ['Jr.', 'I', 'II', 'III', 'IV']
         
-    
-    
-
-
         
-    
-
-    
-    
+    with open('omim_full_dict.json', 'r') as file:
+        omim_dict = json.load(file)    
         
+    with open('abandon_list.json', 'r') as file:
+        abandon_list = json.load(file)
 
+    for omim in omim_dict:
+        for pub in omim_dict[omim]['pubList']:
+            author_name = omim_dict[omim]['pubList'][pub]['authors']
+            if pub not in abandon_list:
+                index = 0
+                while index < len(author_name)-1:
+                    if '{' in author_name[index]:
+                        break
+                    if author_name[index] not in suffix_list:
+                        name = author_name[index] + ', ' + author_name[index+1]
+                        index += 2
+                        name_list.append(name)
+                    else:
+                        name += ', ' + author_name[index] 
+                        index += 1
+                        name_list[len(name_list) - 1] = name
+                        
+    name_list = Counter(name_list)    
+    return name_list
+
+    #Testing code    
+    #for omim in omim_dict:
+        #for pub in omim_dict[omim]['pubList']:
+            #author_name = omim_dict[omim]['pubList'][pub]['authors']     
+           #if len(omim_dict[omim]['pubList'][pub]['authors']) % 2 != 0:
+               #if 'Jr.' not in omim_dict[omim]['pubList'][pub]['authors']:
+                   #if 'III' not in omim_dict[omim]['pubList'][pub]['authors']:
+                       #if 'II' not in omim_dict[omim]['pubList'][pub]['authors']:
+                           #if 'IV' not in omim_dict[omim]['pubList'][pub]['authors']:
+                               #if len(omim_dict[omim]['pubList'][pub]['authors']) != 1:
+                                   #flag = 0
+                                   #for element in omim_dict[omim]['pubList'][pub]['authors']:
+                                       #if '{' in element:
+                                           #flag = 1
+                                           #break
+                                   #if not flag:
+                                       #count += 1
+                                       #print(omim_dict[omim]['pubList'][pub]['authors'])    
+                                       #list_abandon.append(pub)    
+    
+   
+    
+    
+def build_author_or_disease_dict(author_list):
+    
+    author_dict = {}
+    for i in range(len(author_list)):
+        author_dict[i] = author_list[i]
+    return author_dict
+
+def build_author_omimID_mat(author_list, disease_list):
+    return
+
+
+
+if __name__ == '__main__':
+    pass
