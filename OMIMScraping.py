@@ -66,7 +66,7 @@ def rearrange_omim_info():
            - pubmedID/
              - journal
              - title
-             - author
+             - authors
     
     This dictionary is stored in the computer directly.
     
@@ -94,6 +94,7 @@ def rearrange_omim_info():
             if 'pubmedID' in pub['reference'].keys():
                 #count2 += 1
                 pub_dict[pub['reference']['pubmedID']] = {'journal': pub['reference']['source'], 'title': pub['reference']['title'], 'authors': pub['reference']['authors']}
+                pub_dict[pub['reference']['pubmedID']]['authors'] = pub_dict[pub['reference']['pubmedID']]['authors'].split(', ')
             #else:
                 #count += 1
         omim_dict[entry['entry']['mimNumber']]['pubList'] = pub_dict
@@ -117,6 +118,7 @@ def journal_date_parse(string):
 
 if __name__ == '__main__':
     
+    
     with open('omim_full_dict.json', 'r') as file:
         omim_dict = json.load(file)
         
@@ -133,7 +135,43 @@ if __name__ == '__main__':
                 
     journal_distribution = Counter(journal_list)
     date_distribution = Counter(date_list)
-                
+    
+    date_array = []
+    for date in date_distribution:
+        date_array.append(date)
+    
+    date_array = sorted(date_array)
+    date = np.array(date_array)
+    
+    suffix_list = ['Jr.', 'I', 'II', 'III']
+    
+    count = 0
+    count1 = 0
+    
+    
+    #Testing code
+    for omim in omim_dict:
+        for pub in omim_dict[omim]['pubList']:
+            count1 += 1
+            #print(len(omim_dict[omim]['pubList'][pub]['authors']))
+            if len(omim_dict[omim]['pubList'][pub]['authors']) % 2 != 0:
+                if 'Jr.' not in omim_dict[omim]['pubList'][pub]['authors']:
+                    if 'III' not in omim_dict[omim]['pubList'][pub]['authors']:
+                        if 'II' not in omim_dict[omim]['pubList'][pub]['authors']:
+                            if 'IV' not in omim_dict[omim]['pubList'][pub]['authors']:
+                                if len(omim_dict[omim]['pubList'][pub]['authors']) != 1:
+                                    flag = 0
+                                    for element in omim_dict[omim]['pubList'][pub]['authors']:
+                                        if '{' in element:
+                                            flag = 1
+                                            break
+                                    if not flag:
+                                        count += 1
+                                        print(omim_dict[omim]['pubList'][pub]['authors'])    
+    
+    
+    
+    
     
                 
 
