@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
 import numpy as np
 import logging
+import pickle
 import json
 import csv
 import re
@@ -182,17 +183,17 @@ def get_date_dist():
     return date_distribution
     
 
-def get_name_dist():
+def get_name_dist_old():
     
     name_list = []
     suffix_list = ['Jr.', 'I', 'II', 'III', 'IV']
-        
-        
+                
     with open('omim_full_dict.json', 'r') as file:
         omim_dict = json.load(file)    
         
     with open('abandon_list.json', 'r') as file:
         abandon_list = json.load(file)
+        
 
     for omim in omim_dict:
         for pub in omim_dict[omim]['pubList']:
@@ -235,7 +236,9 @@ def get_name_dist():
                                        #list_abandon.append(pub)    
     
    
-    
+def get_author_dist():
+    with open('author_dict_final.json', 'r') as f:
+        return json.load(f)
     
 def build_author_or_disease_dict(author_list):
     
@@ -245,9 +248,80 @@ def build_author_or_disease_dict(author_list):
     return author_dict
 
 def build_author_omimID_mat(author_list, disease_list):
-    return
+    author_omimID_mat = np.zeros((len(author_list), len(disease_list)))
+    author_index_lookup = dict([(author, index) for (index, author) in enumerate(author_list)])
+    
+    for i, author in enumerate(author_list[:5]):
+        print(i, author)
+        
+    with open('omim_dict_final.json', 'r') as f:
+        omim_dict = json.load(f)
+        
+    for disease_index, disease_id in enumerate(disease_list):
+        print('Disease: ', disease_index)
+        for pub in omim_dict[disease_id]['pubList'].values():
+            #print(pub)
+            for author in pub['authors']:
+                #print(author)
+                author_index = author_index_lookup.get(author)
+                #print(author_index)
+                if author_index is not None:
+                    #print("Found")
+                    author_omimID_mat[author_index][disease_index] += 1
+            #break
+        #break
+                
+    return author_omimID_mat
+
+
+def get_mat():
+    with open('omim_dict_final.json', 'r') as f:
+        omim_dict = json.load(f)
+        
+    with open('abandon_list.json', 'r') as file:
+        abandon_list = json.load(file)
+    
+    author_dist = get_author_dist()
+    
+    author_list = []
+    disease_list = []
+    
+    for key in author_dist:
+        author_list.append(key)
+        
+    for key in omim_dict:
+        disease_list.append(key)
+        
+    mat = build_author_omimID_mat(author_list, disease_list)
+    
+    return mat
 
 
 
 if __name__ == '__main__':
-    pass
+       
+    mat = get_mat()
+    
+
+    
+    
+           
+        
+
+
+    
+        
+        
+    
+        
+        
+#---------------------------------------------Testing-------------------------------------------------------
+    
+    #count = 0
+    #count1 = 0
+    
+    #for key in author_dist:
+        #count1 += 1
+        #if author_dist[key] >= 20:
+            #count += 1
+    #print(count/count1)
