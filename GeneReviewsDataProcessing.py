@@ -26,6 +26,7 @@ def transform_names_to_omim_format(full_dict):
             
     #two cases: lowercase and suffix
     for i in full_dict:
+        count = 0
         for j in full_dict[i]['authors']:
             name = ''  #Final name will be stored
             last_name = ''
@@ -78,15 +79,73 @@ def transform_names_to_omim_format(full_dict):
                 else:
                     name = last_name.strip() + ', ' + name.strip()
             
-            j = name
-            print(j)
-                    
-                    
-                
+            #print(i)
+            #print(full_dict[i]['omimID_list'])
             
-        
+            full_dict[i]['authors'][count] = name
+            #print(name)
+            #print('\n')
             
+            count += 1
+            
+                         
     return 
+
+def num_with_no_omimID(gr_dict):
+    '''
+    This function returns the number of gene review articles with no related omimID.
+    Input: gr_dict: gene reviews full dictionary
+    OUtput: count: the number of articles that do not have related omimID
+    '''
+    count = 0
+    list_no_related = []
+    
+    for i in full_dict:
+        if full_dict[i]['omimID_list'] == []:
+            count += 1
+            list_no_related.append(i)
+            print(i)  
+            
+    return list_no_related
+
+def num_no_pub(gr_dict, omim_dict):
+    '''
+    This fucntion is to count the number of authors in genreviews who do not have publications
+    on OMIM
+    
+    '''
+    count = 0
+    count1 = 0
+    
+
+    
+    for disease in gr_dict:
+        for omimID in gr_dict[disease]['omimID_list']:
+            for author in gr_dict[disease]['authors']:
+                count1 += 1
+                flag = 0
+                try:
+                    for pub in omim_dict[omimID]['pubList']:
+                        if author in omim_dict[omimID]['pubList'][pub]['authors']:
+                            flag = 1
+                    if flag == 0:
+                        print(author)
+                        print(omimID)
+                        print(disease)
+                        count += 1
+                except KeyError:
+                    pass
+    
+                    
+    return count, count1
+
+def get_omim_num(full_dict):
+    count = 0
+    
+    for i in full_dict:
+        count += len(full_dict[i]['omimID_list']) 
+        
+    return count
             
     
     
@@ -100,13 +159,19 @@ if __name__ == '__main__':
     with open('disease_author_omimID_dict.json', 'r') as f:
         full_dict = json.load(f)
         
+    with open('omim_dict_final.json', 'r') as f:
+        omim_dict = json.load(f)    
+        
     transform_names_to_omim_format(full_dict)
     
-    for i in full_dict:
-        for j in full_dict[i]['authors']:
-            for k in j:
-                if k.islower() and len(j) < 7:
-                    print(k, len(j), j, i)
+    
+    num, count = num_no_pub(full_dict, omim_dict)
+    
+    #for i in full_dict:
+        #for j in full_dict[i]['authors']:
+            #for k in j:
+                #if k.islower() and len(j) < 7:
+                    #print(k, len(j), j, i)
             
     
     
