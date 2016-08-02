@@ -125,9 +125,6 @@ def build_GR_disease_OMIMid_dict(url_dict):
     return GR_disease_OMIMid_dict
 
 
-
-
-
 if __name__ == '__main__':
     
     #step 1: scrape the urls of diseases from gene reviews main website
