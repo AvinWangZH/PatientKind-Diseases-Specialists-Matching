@@ -1,7 +1,11 @@
+from scipy.sparse import coo_matrix
+from scipy.sparse import csr_matrix
+from scipy.sparse import csc_matrix
 from urllib.request import urlopen
 from collections import Counter
 import matplotlib.pyplot as plt
 import matplotlib.mlab as mlab
+import seaborn as sns
 import numpy as np
 import logging
 import pickle
@@ -251,8 +255,8 @@ def build_author_omimID_mat(author_list, disease_list):
     author_omimID_mat = np.zeros((len(author_list), len(disease_list)))
     author_index_lookup = dict([(author, index) for (index, author) in enumerate(author_list)])
     
-    for i, author in enumerate(author_list[:5]):
-        print(i, author)
+    #for i, author in enumerate(author_list[:]):
+        #print(i, author)
         
     with open('omim_dict_final.json', 'r') as f:
         omim_dict = json.load(f)
@@ -260,13 +264,14 @@ def build_author_omimID_mat(author_list, disease_list):
     for disease_index, disease_id in enumerate(disease_list):
         print('Disease: ', disease_index)
         for pub in omim_dict[disease_id]['pubList'].values():
-            #print(pub)
+            print(pub)
+            print(disease_id)
             for author in pub['authors']:
-                #print(author)
+                print(author)
                 author_index = author_index_lookup.get(author)
-                #print(author_index)
+                print(author_index)
                 if author_index is not None:
-                    #print("Found")
+                    print("Found")
                     author_omimID_mat[author_index][disease_index] += 1
             #break
         #break
@@ -294,14 +299,69 @@ def get_mat():
         
     mat = build_author_omimID_mat(author_list, disease_list)
     
-    return mat
+    return mat, author_list, disease_list
 
 
 
 if __name__ == '__main__':
        
-    mat = get_mat()
+    mat, author_list, omimID_list = get_mat()
     
+    with open('omim_dict_final.json', 'r') as f:
+        omim_dict = json.load(f)
+        
+    with open('disease_author_omimID_dict.json', 'r') as f:
+        gr_dict = json.load(f)    
+        
+    #Store the data in a form of sparse matrix
+    a = coo_matrix(mat)
+    #print('Finished form matrix {}.'.format('a'))
+    #b = csr_matrix(mat)
+    #print('Finished form matrix {}.'.format('b'))
+    #c = csc_matrix(mat)
+    #print('Finished form matrix {}.'.format('c'))
+    
+    with open('author_omimID_mat_coo.p', 'wb') as file:
+        pickle.dump(a, file)  
+        
+    with open('author_list_for_learning.json', 'w') as file:
+        json.dump(author_list, file)  
+        
+    with open('disease_list_for_learning.json', 'w') as file:
+        json.dump(omimID_list, file)      
+    
+    #with open('author_omimID_mat_csr.p', 'wb') as file:
+        #pickle.dump(b, file)
+        
+    #with open('author_omimID_mat_csc.p', 'wb') as file:
+        #pickle.dump(c, file)    
+        
+    #with open('author_omimID_mat_csc.p', 'rb') as file:
+        #c = pickle.load(file)        
+
+    #with open('author_omimID_mat_csr.p', 'rb') as file:
+        #b = pickle.load(file)     
+        
+        
+    x = 0; y = 0
+    #Find the x-coordinate of a number (author-index)
+    for i in range(len(c.data)):
+        if c.data[i] == 99:
+            print(c.indices[i])
+            x = c.indices[i]   
+            
+    #Find the y-coordinate of a number (omimID-index)      
+    for i in range(len(b.data)):
+        if b.data[i] == 99:
+            print(b.indices[i])
+            y = b.indices[i]                
+    
+    b.getrow[166875].data
+    c.getcol[11814].data
+        
+   
+    
+
 
     
     
