@@ -1,10 +1,10 @@
-import urllib.request
 from urllib.parse import urlparse
 from copy import deepcopy
-import json
+import urllib.request
 import pickle
+import json
 
-def parseAuthorName(filename):
+def parse_author_name(filename):
     #Open a file and load the data
     with open(filename, encoding = 'utf-8') as f:
         data = f.readlines()
@@ -118,7 +118,7 @@ def scrape_all_author_pmid(author_list):
 if __name__ == '__main__':
     #to get authors list and the diseases list corresponding to it
     info = pickle.load(open('author_info.p', 'rb'))
-    author_list = parseAuthorName('Author Names.txt')
+    author_list = parse_author_name('Author Names.txt')
     disease_list = diseaseList('Diseases.txt')
     
     author_info = {}
