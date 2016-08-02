@@ -1,8 +1,13 @@
+"""
+What does this file do?
+"""
+
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 import pickle
 import json
 import re
+import logging
 
 
 def read_json_file(filename, var_name):
@@ -57,8 +62,7 @@ def build_GR_url_dict():
     
     elements = bsObj.findAll('a', {'class': 'toc-item'})
     
-    total_num_disease = int(input('How many diseases are on GeneRiviews: '))
-    count = 0
+    logging.info('Found {} articles in gene reviews'.format(654))
     
     #put all disease name and link into url_dict
     for ele in elements:
@@ -125,23 +129,54 @@ def build_GR_disease_OMIMid_dict(url_dict):
     return GR_disease_OMIMid_dict
 
 
+def parse_args(args):
+    from argparse import ArgumentParser
+    description = __doc__.strip()
+    
+    parser = ArgumentParser(description=description)
+    parser.add_argument('urls_filename')
+    parser.add_argument('disease_omim_map_filename')
+
+    return parser.parse_args(args)
+
+
+def fetch_urls(urls_filename):
+    if os.path.isfile(urls_filename):
+        logging.warning('File already exists: {}\nLoading previously scraped URLs...'.format(urls_filename))
+        url_dict = read_json_file(urls_filename)
+    else:
+        logging.info('Scraping URLs of diseases from gene reviews website...')
+        url_dict = build_GR_url_dict()
+        
+        logging.info('Saving scraped data to file: {}'.format(urls_filename))
+        write_json_file(urls_filename, url_dict)
+    
+    return url_dict
+
+
+def fetch_disease_omim_map(url_dict, disease_omim_map_filename):
+    if os.path.isfile(disease_omim_map_filename):
+        logging.warning('File already exists: {}\nLoading previous OMIM mappings...'.format(disease_omim_map_filename))
+        GR_disease_OMIMid_dict = load_json_file(disease_omim_map_filename)
+    else:
+        logging.info('Parsing OMIM IDs from gene reviews pages...')
+        GR_disease_OMIMid_dict = build_GR_disease_OMIMid_dict(url_dict)
+        
+        logging.info('Saving disease-OMIM mapping to file: {}'.format(disease_omim_map_filename))
+        write_json_file(disease_omim_map_filename, GR_disease_OMIMid_dict)
+        
+    return GR_disease_OMIMid_dict
+
+
+def main(urls_filename, disease_omim_map_filename):
+    url_dict = load_urls(urls_filename)
+    GR_disease_OMIMid_dict = fetch_disease_omim_map(url_dict, disease_omim_map_filename)
+    
+
 if __name__ == '__main__':
-    
-    #step 1: scrape the urls of diseases from gene reviews main website
-    url_dict = build_GR_url_dict()
-    filename = 'url_dict.json'
-    
-    #Save the file
-    #write_json_file(filename, url_dict)
-    
-    
-    #step 2: create GR_disease_OMIMid_dict and store it 
-    GR_disease_OMIMid_dict = build_GR_disease_OMIMid_dict(url_dict)
-    filename = 'GR_disease_OMIMid_dict.json'
-    
-    #Save the file
-    #write_json_file(filename, GR_disease_OMIMid_dict)
-    
+    args = parse_args(args)
+    logging.basicConfig(level='INFO')
+    main(**vars(args))
     
 
 
