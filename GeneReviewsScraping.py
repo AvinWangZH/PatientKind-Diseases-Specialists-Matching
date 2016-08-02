@@ -1,7 +1,8 @@
-from bs4 import BeautifulSoup
 from urllib.request import Request, urlopen
-import re
+from bs4 import BeautifulSoup
 import json
+import re
+
 
 with open('link_list.json', 'r') as file:
     link_list = json.load(file)
