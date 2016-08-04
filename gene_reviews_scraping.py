@@ -1,5 +1,8 @@
 """
 What does this file do?
+This python script has two functions:
+1. Scrape disease names and links from the main page of gene reviews website
+2. Crawl through all link to build gene review disease - OMIM id mappings
 """
 
 from urllib.request import Request, urlopen
