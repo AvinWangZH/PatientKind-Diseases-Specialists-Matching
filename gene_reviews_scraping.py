@@ -39,7 +39,7 @@ def write_pickle_file(filename, var):
         
     return
 
-def build_GR_url_dict():
+def build_gene_reviews_url_dict():
     '''
     Introduction: This function is used to scrape the gene reveiws web page to 
     get all links of diseases which can be used to further website crawl in next 
@@ -73,14 +73,14 @@ def build_GR_url_dict():
     
     return url_dict
 
-def get_single_disease_OMIM_mapping(url):
+def get_single_disease_omim_mapping(url):
     '''
     Introduction: this code is to map a signle gene reveiws disease to its related 
-    OMIM Ids.
+    omim Ids.
     
     Input: url (string)
     
-    Output: omim_ids --- a list with all related OMIM ID in it
+    Output: omim_ids --- a list with all related omim ID in it
     '''
     
     url = 'http://www.ncbi.nlm.nih.gov/' + url
@@ -91,42 +91,42 @@ def get_single_disease_OMIM_mapping(url):
     
     return omim_ids
 
-def build_GR_disease_OMIMid_dict(url_dict):
+def build_gene_reviews_disease_omimid_dict(url_dict):
     '''
-    Introduction: this function builds the GR_disease_OMIMid_dict which is the 
-    dictionary to store all gene reviews diseases and OMIM id mappings
+    Introduction: this function builds the gene_reviews_disease_omimid_dict which is the 
+    dictionary to store all gene reviews diseases and omim id mappings
     
-    Input: url_dict --- a dictionary stores all urls names of GR diseases 
+    Input: url_dict --- a dictionary stores all urls names of gene reviews diseases 
     
-    Output: GR_disease_OMIMid_dict --- a dictionary which contains all GR diseases
-    and OMIM Id mappings
+    Output: gene_reviews_disease_omimid_dict --- a dictionary which contains all gene reviews diseases
+    and omim Id mappings
     
     '''    
     
-    #Initialize GR_disease_OMIMid_dict to store gene reveiws and OMIM id data
-    GR_disease_OMIMid_dict = {}
+    #Initialize gene_reviews_disease_omimid_dict to store gene reveiws and omim id data
+    gene_reviews_disease_omimid_dict = {}
     
-    #retrieve each disease in the dictionary of GR
+    #retrieve each disease in the dictionary of gene reviews
     for i in url_dict:
         
-        #print(GR_disease_OMIMid_dict[url_dict[i]])
+        #print(gene_reviews_disease_omimid_dict[url_dict[i]])
         
         id_list = []  #list of omim ids for the disease
-        omim_id = get_single_disease_OMIM_mapping(i)
+        omim_id = get_single_disease_omim_mapping(i)
         
         
         #check if a disease has a related omim id or not and fliter the unrelated data
         if omim_id != []:
             for j in omim_id:
                 print(j.text)
-                if j.text != 'View All in OMIM':
+                if j.text != 'View All in omim':
                     id_list.append(j.text)
         
-        #put each list into GR_disease_OMIMid_dict
+        #put each list into gene_reviews_disease_omimid_dict
         disease_name = url_dict[i]
-        GR_disease_OMIMid_dict[disease_name] = id_list
+        gene_reviews_disease_omimid_dict[disease_name] = id_list
     
-    return GR_disease_OMIMid_dict
+    return gene_reviews_disease_omimid_dict
 
 
 def parse_args(args):
@@ -146,7 +146,7 @@ def fetch_urls(urls_filename):
         url_dict = read_json_file(urls_filename)
     else:
         logging.info('Scraping URLs of diseases from gene reviews website...')
-        url_dict = build_GR_url_dict()
+        url_dict = build_gene_reviews_url_dict()
         
         logging.info('Saving scraped data to file: {}'.format(urls_filename))
         write_json_file(urls_filename, url_dict)
@@ -156,21 +156,21 @@ def fetch_urls(urls_filename):
 
 def fetch_disease_omim_map(url_dict, disease_omim_map_filename):
     if os.path.isfile(disease_omim_map_filename):
-        logging.warning('File already exists: {}\nLoading previous OMIM mappings...'.format(disease_omim_map_filename))
-        GR_disease_OMIMid_dict = load_json_file(disease_omim_map_filename)
+        logging.warning('File already exists: {}\nLoading previous omim mappings...'.format(disease_omim_map_filename))
+        gene_reviews_disease_omimid_dict = load_json_file(disease_omim_map_filename)
     else:
-        logging.info('Parsing OMIM IDs from gene reviews pages...')
-        GR_disease_OMIMid_dict = build_GR_disease_OMIMid_dict(url_dict)
+        logging.info('Parsing omim IDs from gene reviews pages...')
+        gene_reviews_disease_omimid_dict = build_gene_reviews_disease_omimid_dict(url_dict)
         
-        logging.info('Saving disease-OMIM mapping to file: {}'.format(disease_omim_map_filename))
-        write_json_file(disease_omim_map_filename, GR_disease_OMIMid_dict)
+        logging.info('Saving disease-omim mapping to file: {}'.format(disease_omim_map_filename))
+        write_json_file(disease_omim_map_filename, gene_reviews_disease_omimid_dict)
         
-    return GR_disease_OMIMid_dict
+    return gene_reviews_disease_omimid_dict
 
 
 def main(urls_filename, disease_omim_map_filename):
     url_dict = load_urls(urls_filename)
-    GR_disease_OMIMid_dict = fetch_disease_omim_map(url_dict, disease_omim_map_filename)
+    gene_reviews_disease_omimid_dict = fetch_disease_omim_map(url_dict, disease_omim_map_filename)
     
 
 if __name__ == '__main__':
