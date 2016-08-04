@@ -125,22 +125,24 @@ if __name__ == '__main__':
         author_omimID_full_mat = pickle.load(f4)
         
     with open('disease_list_for_learning.json', 'r') as f5:
-        full_omimID_list = json.load(f5)    
+        full_omimID_list_omim = json.load(f5)    
     
     with open('author_list_for_learning.json', 'r') as f6:
-        full_author_list = json.load(f6)    
+        full_author_list_omim = json.load(f6)    
     
     
     training_data_dict = {} #key: OMIM Ids, value: training data
+    other_data_dict = {} #key: OMIM Ids, value: total # of pub for that disease
     
     #count every authors publications in related OMIM ids
     for omim_id in gene_review_training_dict:
         full_author_list = []
+        total_num_pub = len(omim_dict[omim_id]['pubList'])
         for pubmed_id in omim_dict[omim_id]['pubList']:
             full_author_list.extend(omim_dict[omim_id]['pubList'][pubmed_id]['authors'])
         
         full_author_pub_count = dict(Counter(full_author_list))
-        
+        other_data_dict[omim_id] = total_num_pub
         training_data_dict[omim_id] = full_author_pub_count
     
     #start build features
@@ -148,6 +150,43 @@ if __name__ == '__main__':
         for author in training_data_dict[omim_id]:
             training_data_dict[omim_id][author] = [training_data_dict[omim_id][author]]
     
+    
+    #feature 2: add number of authors who published in the OMIM id
+    for omim_id in training_data_dict:
+        author_num = len(training_data_dict[omim_id])
+        for author in training_data_dict[omim_id]:
+            training_data_dict[omim_id][author].append(author_num)
+    
+    
+    #feature 3&4: add total publication in the OMIM id and percentage of author pub in that OMIM id pub pool
+    for omim_id in training_data_dict:
+        for author in training_data_dict[omim_id]:
+            personal_pub = training_data_dict[omim_id][author][0]
+            training_data_dict[omim_id][author].append(other_data_dict[omim_id])
+            training_data_dict[omim_id][author].append(personal_pub/other_data_dict[omim_id])
+    
+    #feature 5: add normalized publication number for each author (with 0 std, nan instead)
+    for omim_id in training_data_dict:
+        pub_num_list = []
+        for author in training_data_dict[omim_id]:
+            pub_num_list.append(training_data_dict[omim_id][author][0])
+        pub_num_arr = np.array(pub_num_list)
+        mean = np.mean(pub_num_arr)
+        std = np.std(pub_num_arr)
+        for author in training_data_dict[omim_id]:
+            training_data_dict[omim_id][author].append((training_data_dict[omim_id][author][0]-mean)/std)   
+            
+    #feature 6: num of disease the author has publications on
+    count = 0
+    for omim_id in training_data_dict:
+        for author in training_data_dict[omim_id]:
+            index = full_author_list_omim.index(author)
+            num_disease_with_paper = author_omimID_full_mat.getrow(index).size
+            training_data_dict[omim_id][author].append(num_disease_with_paper)
+            print(count)
+            count += 1
+            
+            
     
     
     
