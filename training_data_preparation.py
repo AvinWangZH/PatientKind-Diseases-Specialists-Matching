@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import matplotlib.font_manager
 from sklearn import svm
 from collections import Counter
+import logging
 
 def get_author_list(training_dict):   
     
@@ -103,33 +104,7 @@ def get_num_experts(mat):
     return count
 
             
-            
-
-#def get_training_data(training_dict, omim_dict):
-    
-    
-
-
-if __name__ == '__main__':
-
-    with open('disease_author_omimID_dict.json', 'r') as f1: #for gene review
-        gene_review_full_dict = json.load(f1)
-        
-    with open('omim_dict_final.json', 'r') as f2:
-        omim_dict = json.load(f2)    
-    
-    with open('training_dict.json', 'r') as f3:
-        gene_review_training_dict = json.load(f3)
-        
-    with open('author_omimID_mat_coo.p', 'rb') as f4:
-        author_omimID_full_mat = pickle.load(f4)
-        
-    with open('disease_list_for_learning.json', 'r') as f5:
-        full_omimID_list_omim = json.load(f5)    
-    
-    with open('author_list_for_learning.json', 'r') as f6:
-        full_author_list_omim = json.load(f6)    
-    
+def get_training_data(gene_review_training_dict, omim_dict):
     
     training_data_dict = {} #key: OMIM Ids, value: training data
     other_data_dict = {} #key: OMIM Ids, value: total # of pub for that disease
@@ -185,23 +160,166 @@ if __name__ == '__main__':
             training_data_dict[omim_id][author].append(num_disease_with_paper)
             print(count)
             count += 1
+    
+    #feature 7&8: number of publications as first author/last author
+    for omim_id in training_data_dict:
+        first_last_author_dict = {}
+        for pub in omim_dict[omim_id]['pubList']:
+            if omim_dict[omim_id]['pubList'][pub]['authors'] != []:
+                first_author = omim_dict[omim_id]['pubList'][pub]['authors'][0]
+                last_author = omim_dict[omim_id]['pubList'][pub]['authors'][-1]
+                if first_author in first_last_author_dict:
+                    first_last_author_dict[first_author]['count_first'] += 1
+                else:
+                    first_last_author_dict[first_author] = {'count_first': 1, 'count_last': 0}
+                    
+                if last_author in first_last_author_dict:
+                    first_last_author_dict[last_author]['count_last'] += 1
+                else:
+                    first_last_author_dict[last_author] = {'count_first': 0, 'count_last': 1} 
+                    
+        for author in training_data_dict[omim_id]:
+            if author not in first_last_author_dict:
+                training_data_dict[omim_id][author].extend([0, 0])
+            else:
+                first_last_count = first_last_author_dict[author]
+                training_data_dict[omim_id][author].append(first_last_count['count_first'])
+                training_data_dict[omim_id][author].append(first_last_count['count_last'])
+    
+    #feature 9&10&11: number of publications in 3 years, 5 years and 10 years
+    for omim_id in training_data_dict:
+        pub_year_count = {}
+        for author in training_data_dict[omim_id]:
+            pub_year_count[author] = [0, 0, 0]
             
+        for pub in omim_dict[omim_id]['pubList']:
+            if 'Note' in omim_dict[omim_id]['pubList'][pub]['journal']:
+                #print(omim_dict[omim_id]['pubList'][pub]['journal'])
+                index = omim_dict[omim_id]['pubList'][pub]['journal'].index('Note')
+                pub_year = int(omim_dict[omim_id]['pubList'][pub]['journal'][index-6:index-2])
+            elif 'Fig' in omim_dict[omim_id]['pubList'][pub]['journal']:
+                index = omim_dict[omim_id]['pubList'][pub]['journal'].index('Fig')
+                pub_year = int(omim_dict[omim_id]['pubList'][pub]['journal'][index-6:index-2])
+            else:
+                #print(omim_dict[omim_id]['pubList'][pub]['journal'])
+                pub_year = int(omim_dict[omim_id]['pubList'][pub]['journal'].replace(' .', '')[-5:-1])
+                
+            if 2016 - pub_year < 3:
+                for author in omim_dict[omim_id]['pubList'][pub]['authors']:
+                    pub_year_count[author][0] += 1
+                
+            elif 2016 - pub_year < 5:
+                for author in omim_dict[omim_id]['pubList'][pub]['authors']:
+                    pub_year_count[author][1] += 1                
+                
+            elif 2016 - pub_year < 10:
+                for author in omim_dict[omim_id]['pubList'][pub]['authors']:
+                    pub_year_count[author][2] += 1     
+    
+        for author in training_data_dict[omim_id]:
+            print(pub_year_count[author])
+            training_data_dict[omim_id][author].extend(pub_year_count[author])  
             
-    
-    
-    
+             
+    #add labels to the training data
+    for omim_id in training_data_dict:
+        for author in training_data_dict[omim_id]:
+            if author in gene_review_training_dict[omim_id]['authors']:
+                training_data_dict[omim_id][author] = (training_data_dict[omim_id][author], 1)
+            else:
+                training_data_dict[omim_id][author] = (training_data_dict[omim_id][author], 0)   
             
+    return training_data_dict
+
+
+def build_positive_testing_set(training_data_dict):
+    positive_testing_set = np.zeros((1, 11))
     
+    for omim_id in training_data_dict:
+        for author in training_data_dict[omim_id]:
+            if training_data_dict[omim_id][author][1] == 1:
+                positive_testing_set = np.vstack((positive_testing_set, training_data_dict[omim_id][author][0]))
+                logging.warning('{} number of positive examples'.format(count))
+            
+    positive_testing_set = np.delete(positive_testing_set, 0, 0)
+    
+    return positive_testing_set
+    
+    
+def build_negative_set(training_data_dict):
+    negative_set = np.zeros((1, 11))
+    
+    for omim_id in training_data_dict:
+        for author in training_data_dict[omim_id]:
+            if training_data_dict[omim_id][author][1] != 1:
+                negative_set = np.vstack((negative_set, training_data_dict[omim_id][author][0]))
+            
+    negative_set = np.delete(negative_set, 0, 0)   
+    
+    return negative_set
+
+    
+if __name__ == '__main__':
+
+    with open('disease_author_omimID_dict.json', 'r') as f1: #for gene review
+        gene_review_full_dict = json.load(f1)
+        
+    with open('omim_dict_final.json', 'r') as f2:
+        omim_dict = json.load(f2)    
+    
+    with open('gene_reviews_training_dict.json', 'r') as f3:
+        gene_review_training_dict = json.load(f3)
+        
+    with open('author_omimID_mat_coo.p', 'rb') as f4:
+        author_omimID_full_mat = pickle.load(f4)
+        
+    with open('disease_list_for_learning.json', 'r') as f5:
+        full_omimID_list_omim = json.load(f5)    
+    
+    with open('author_list_for_learning.json', 'r') as f6:
+        full_author_list_omim = json.load(f6)  
+        
+    with open('training_data_dict.json', 'r') as f:
+        training_data_dict = json.load(f)
+        
+        
+    # used for first time to gathering the data
+    #training_data_dict = get_training_data(gene_review_training_dict, omim_dict)
+    
+    #get positive and negative sets
+    #positive_set = build_positive_testing_set(training_data_dict)
+    #negative_set = build_negative_set(training_data_dict)
+                
         
     
-        
-            
+    
+ 
+ 
+#-----------------------------------------------------Unused Code------------------------------------------------
     #author_list = get_author_list(training_dict)
     #omimID_list = get_omimID_list(training_dict)
     #mat_label = get_omimID_author_label(author_list, omimID_list, training_dict)
     #mat_feature = get_feature_mat(author_list, omimID_list, training_dict, author_omimID_full_mat)
     
     #author_omimID_mat = build_author_omimID_mat(author_list_omim, disease_list_omim)
+    
+    
+    #Get p-n set
+    #positive_testing_set = np.zeros((1, 11))
+    #negative_set = np.zeros((1, 11))
+    #count = 0
+    
+    #for omim_id in training_data_dict:
+        #for author in training_data_dict[omim_id]:
+            #if training_data_dict[omim_id][author][1] == 1:
+                #count += 1
+                #positive_testing_set = np.vstack((positive_testing_set, training_data_dict[omim_id][author][0]))
+                #logging.warning('{} number of positive examples'.format(count))
+            #else:
+                #negative_set = np.vstack((negative_set, training_data_dict[omim_id][author][0]))
+            
+    #positive_testing_set = np.delete(positive_testing_set, 0, 0)
+    #negative_set = np.delete(negative_set, 0, 0)    
     
         
     
