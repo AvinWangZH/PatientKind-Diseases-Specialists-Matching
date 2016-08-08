@@ -83,7 +83,7 @@ for row_num in negative_test_row_num:
         break        
 logging.info('X_negative_test has been finished')
 
-for row_num in negative_training_row_num:
+for row_num in negative_training_row_num[:50000]:
     if not np.any(np.isnan(negative_set[row_num, :])):
         X_train = np.vstack((X_train, negative_set[row_num, :]))
 logging.info('X_train has been finished')
@@ -98,13 +98,19 @@ X_negative_test = np.delete(X_negative_test, 0, 0)
 n_error_train_list = []
 n_error_test_list = []
 n_error_outlier_list = []
+prec_list = []
+rec_list = []
+F1_list = []
 
 value = [0.001, 0.003, 0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30]
 
 for index, gamma_value in enumerate(value):
     n_error_train_list.append([])
     n_error_test_list.append([])
-    n_error_outlier_list.append([])   
+    n_error_outlier_list.append([]) 
+    prec_list.append([])
+    rec_list.append([])
+    F1_list.append([])
     for nu_value in value[:7]:
         clf = svm.OneClassSVM(nu=nu_value, kernel="rbf", gamma=gamma_value)
         clf.fit(X_train)
@@ -122,7 +128,25 @@ for index, gamma_value in enumerate(value):
         n_error_outlier_list[index].append(y_pred_outlier[y_pred_outlier == 1].size/n_outlier)
         
         print('False positive rate: %04.2f and False negative rate: %04.2f' %(y_pred_test[y_pred_test == -1].size/n_test, y_pred_outlier[y_pred_outlier == 1].size/n_outlier))
-
+        
+        tp = 1000 - y_pred_outlier[y_pred_outlier == 1].size
+        fp = y_pred_test[y_pred_test == -1].size
+        fn = y_pred_outlier[y_pred_outlier == 1].size
+        
+        prec = tp / (tp + fp)
+        rec = tp / (tp + fn)
+        
+        F1 = 2 * prec * rec / (prec + rec)
+        
+        prec_list[index].append(prec)
+        rec_list[index].append(rec)
+        F1_list[index].append(F1)
+        
+        print('Precision is: %f' % prec)
+        print('Recall is: %f' % rec)
+        print('F1 score is: %f' % F1)
+        
+        print('\n')
 
 '''
 xx, yy = np.meshgrid(np.linspace(-50, 50, 500), np.linspace(-50, 50, 500))
