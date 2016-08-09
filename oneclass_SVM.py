@@ -83,7 +83,7 @@ for row_num in negative_test_row_num:
         break        
 logging.info('X_negative_test has been finished')
 
-for row_num in negative_training_row_num[:50000]:
+for row_num in negative_training_row_num:
     if not np.any(np.isnan(negative_set[row_num, :])):
         X_train = np.vstack((X_train, negative_set[row_num, :]))
 logging.info('X_train has been finished')
