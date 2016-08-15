@@ -1,9 +1,5 @@
 print(__doc__)
 
-# Authors: Clay Woolam <clay@woolam.org>
-#          Andreas Mueller <amueller@ais.uni-bonn.de>
-# Licence: BSD
-
 import json
 import pickle
 import logging
@@ -33,7 +29,7 @@ negative_val_row_num = negative_random_row_num[:int(positive_set.shape[0]/2)]
 negative_test_row_num = negative_random_row_num[int(positive_set.shape[0]/2):int(positive_set.shape[0])]
 negative_training_row_num = negative_random_row_num[int(positive_set.shape[0]):]
 
-num_features = 10
+num_features = 8
 X_positive_val = [] #np.zeros((1, num_features))
 X_negative_val = [] #np.zeros((1, num_features))
 X_positive_test = [] #np.zeros((1, num_features))
@@ -43,7 +39,7 @@ X_train = []
 count = 1
 for row_num in positive_val_row_num:
     if not np.any(np.isnan(positive_set[row_num, :])):
-        X_positive_val.append(list(np.concatenate((positive_set[row_num, 0:1], positive_set[row_num, 2:]), axis=0)))
+        X_positive_val.append(list(np.concatenate((positive_set[row_num, 0:1], positive_set[row_num, 4:]), axis=0)))
         #X_positive_val = np.vstack((X_positive_val, np.concatenate((positive_set[row_num, 0:1], positive_set[row_num, 4:]), axis=0)))
         count += 1
     if count == 1000:
@@ -54,7 +50,7 @@ logging.info('X_positive_val has been finished')
 count = 1
 for row_num in negative_val_row_num:
     if not np.any(np.isnan(negative_set[row_num, :])):
-        X_negative_val.append(list(np.concatenate((negative_set[row_num, 0:1], negative_set[row_num, 2:]), axis=0)))
+        X_negative_val.append(list(np.concatenate((negative_set[row_num, 0:1], negative_set[row_num, 4:]), axis=0)))
         #X_negative_val = np.vstack((X_negative_val, np.concatenate((negative_set[row_num, 0:1], negative_set[row_num, 4:]), axis=0)))
         count += 1
     if count == 1000:
@@ -66,7 +62,7 @@ logging.info('X_negative_val has been finished')
 count = 1  
 for row_num in positive_test_row_num:
     if not np.any(np.isnan(positive_set[row_num, :])):
-        X_positive_test.append(list(np.concatenate((positive_set[row_num, 0:1], positive_set[row_num, 2:]), axis=0)))
+        X_positive_test.append(list(np.concatenate((positive_set[row_num, 0:1], positive_set[row_num, 4:]), axis=0)))
         #X_positive_test = np.vstack((X_positive_test, np.concatenate((positive_set[row_num, 0:1], positive_set[row_num, 4:]), axis=0)))
         count += 1
     if count == 1000:
@@ -77,7 +73,7 @@ logging.info('X_positive_test has been finished')
 count = 1  
 for row_num in negative_test_row_num:
     if not np.any(np.isnan(negative_set[row_num, :])):
-        X_negative_test.append(list(np.concatenate((negative_set[row_num, 0:1], negative_set[row_num, 2:]), axis=0)))
+        X_negative_test.append(list(np.concatenate((negative_set[row_num, 0:1], negative_set[row_num, 4:]), axis=0)))
         #X_negative_test = np.vstack((X_negative_test, np.concatenate((negative_set[row_num, 0:1], negative_set[row_num, 4:]), axis=0)))
         count += 1
     if count == 1000:
@@ -85,9 +81,9 @@ for row_num in negative_test_row_num:
 X_negative_test = np.array(X_negative_test)
 logging.info('X_negative_test has been finished')
 
-for row_num in negative_training_row_num[:30000]:
+for row_num in negative_training_row_num[:10000]:
     if not np.any(np.isnan(negative_set[row_num, :])):
-        X_train.append(list(np.concatenate((negative_set[row_num, 0:1], negative_set[row_num, 2:]), axis=0)))
+        X_train.append(list(np.concatenate((negative_set[row_num, 0:1], negative_set[row_num, 4:]), axis=0)))
         #X_train.append(list(np.concatenate((negative_set[row_num, 0:1], negative_set[row_num, 4:]), axis=0)))
 X_train = np.array(X_train)
 logging.info('X_train has been finished')
