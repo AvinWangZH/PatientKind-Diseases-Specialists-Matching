@@ -126,6 +126,7 @@ def get_training_data(gene_review_training_dict, omim_dict):
             training_data_dict[omim_id][author] = [training_data_dict[omim_id][author]]
     
     
+    #Ignore feature 2, 3 and 4
     #feature 2: add number of authors who published in the OMIM id
     for omim_id in training_data_dict:
         author_num = len(training_data_dict[omim_id])
@@ -140,7 +141,7 @@ def get_training_data(gene_review_training_dict, omim_dict):
             training_data_dict[omim_id][author].append(other_data_dict[omim_id])
             training_data_dict[omim_id][author].append(personal_pub/other_data_dict[omim_id])
     
-    #feature 5: add normalized publication number for each author (with 0 std, nan instead)
+    #feature 5: add normalized publication number for each author (with 0 std, nan instead --> label as 0)
     for omim_id in training_data_dict:
         pub_num_list = []
         for author in training_data_dict[omim_id]:
@@ -149,7 +150,10 @@ def get_training_data(gene_review_training_dict, omim_dict):
         mean = np.mean(pub_num_arr)
         std = np.std(pub_num_arr)
         for author in training_data_dict[omim_id]:
-            training_data_dict[omim_id][author].append((training_data_dict[omim_id][author][0]-mean)/std)   
+            if std != 0:
+                training_data_dict[omim_id][author].append((training_data_dict[omim_id][author][0]-mean)/std)
+            else:
+                training_data_dict[omim_id][author].append(0)
             
     #feature 6: num of disease the author has publications on
     count = 0
@@ -218,7 +222,76 @@ def get_training_data(gene_review_training_dict, omim_dict):
     
         for author in training_data_dict[omim_id]:
             print(pub_year_count[author])
-            training_data_dict[omim_id][author].extend(pub_year_count[author])  
+            training_data_dict[omim_id][author].extend(pub_year_count[author]) 
+            
+    
+    #feature 12&13&14: number of publications in top 3, 5, 10 Bio venues
+    bio_journal_list = [ 'New Eng. J. Med.', 'Lancet', 'Cell', 'Proc. Nat. Acad. Sci.', 'J. Clin. Oncol.', 'JAMA', 'Nature Genet.', 'Circulation', 'J. Am. Coll. Cardiol.', 'PLoS One']
+    for omim_id in training_data_dict:
+        pub_journal_count = {}
+        for author in training_data_dict[omim_id]:
+            pub_journal_count[author] = [0, 0, 0]
+            
+        for pub in omim_dict[omim_id]['pubList']:
+                
+            if omim_dict[omim_id]['pubList'][pub]['journal'] in bio_journal_list[:3]:
+                for author in omim_dict[omim_id]['pubList'][pub]['authors']:
+                    pub_journal_count[author][0] += 1
+                
+            elif omim_dict[omim_id]['pubList'][pub]['journal'] in bio_journal_list[3:5]:
+                for author in omim_dict[omim_id]['pubList'][pub]['authors']:
+                    pub_journal_count[author][1] += 1                
+                
+            elif omim_dict[omim_id]['pubList'][pub]['journal'] in bio_journal_list[5:]:
+                for author in omim_dict[omim_id]['pubList'][pub]['authors']:
+                    pub_journal_count[author][2] += 1 
+                        
+        for author in training_data_dict[omim_id]:
+            print(pub_journal_count[author])
+            training_data_dict[omim_id][author].extend(pub_journal_count[author])             
+  
+    
+    #feature 15&16&17: number of publications in top 3, 5, 10 Gene venues
+    genet_journal_list = ['Nature Genet.', 'Nature Rev. Genet.', 'PLoS Genet.', 'Genome Res.', 'Oncogene', 'Genome Biol.', 'Am. J. Hum Genet.', 'Hum. Molec. Genet.', 'BMC Genet.', 'Genetics']  
+    
+    for omim_id in training_data_dict:
+        pub_journal_count = {}
+        for author in training_data_dict[omim_id]:
+            pub_journal_count[author] = [0, 0, 0]
+            
+        for pub in omim_dict[omim_id]['pubList']:
+                
+            if omim_dict[omim_id]['pubList'][pub]['journal'] in genet_journal_list[:3]:
+                for author in omim_dict[omim_id]['pubList'][pub]['authors']:
+                    pub_journal_count[author][0] += 1
+                
+            elif omim_dict[omim_id]['pubList'][pub]['journal'] in genet_journal_list[3:5]:
+                for author in omim_dict[omim_id]['pubList'][pub]['authors']:
+                    pub_journal_count[author][1] += 1                
+                
+            elif omim_dict[omim_id]['pubList'][pub]['journal'] in genet_journal_list[5:]:
+                for author in omim_dict[omim_id]['pubList'][pub]['authors']:
+                    pub_journal_count[author][2] += 1 
+                        
+        for author in training_data_dict[omim_id]:
+            print(pub_journal_count[author])
+            training_data_dict[omim_id][author].extend(pub_journal_count[author])      
+    
+    #feature 18&19: number of publications in Nature or Science
+    two_best_journals = ['Nature', 'Science']
+    for omim_id in training_data_dict:
+        pub_journal_count = {}
+        for author in training_data_dict[omim_id]:
+            pub_journal_count[author] = [0]
+            
+        for pub in omim_dict[omim_id]['pubList']:
+            if omim_dict[omim_id]['pubList'][pub]['journal'] in two_best_journals:
+                for author in omim_dict[omim_id]['pubList'][pub]['authors']:
+                    pub_journal_count[author][0] += 1
+                            
+        for author in training_data_dict[omim_id]:
+            training_data_dict[omim_id][author].extend(pub_journal_count[author])      
+    
             
              
     #add labels to the training data
@@ -233,28 +306,31 @@ def get_training_data(gene_review_training_dict, omim_dict):
 
 
 def build_positive_testing_set(training_data_dict):
-    positive_testing_set = np.zeros((1, 11))
+    positive_testing_set = []
     
+    count = 0
     for omim_id in training_data_dict:
         for author in training_data_dict[omim_id]:
             if training_data_dict[omim_id][author][1] == 1:
-                positive_testing_set = np.vstack((positive_testing_set, training_data_dict[omim_id][author][0]))
-                logging.warning('{} number of positive examples'.format(count))
+                temp = training_data_dict[omim_id][author][0] + [author] + [omim_id]
+                count += 1
+                positive_testing_set.append(temp)
+                #logging.warning('{} number of positive examples'.format(count))
             
-    positive_testing_set = np.delete(positive_testing_set, 0, 0)
     
     return positive_testing_set
     
     
 def build_negative_set(training_data_dict):
-    negative_set = np.zeros((1, 11))
-    
+    negative_set = []
+    count = 0
     for omim_id in training_data_dict:
         for author in training_data_dict[omim_id]:
             if training_data_dict[omim_id][author][1] != 1:
-                negative_set = np.vstack((negative_set, training_data_dict[omim_id][author][0]))
-            
-    negative_set = np.delete(negative_set, 0, 0)   
+                temp = training_data_dict[omim_id][author][0] + [author] + [omim_id]
+                negative_set.append(temp)
+                count += 1
+                #logging.warning('{} number of negative examples'.format(count))
     
     return negative_set
 
@@ -279,12 +355,12 @@ if __name__ == '__main__':
     with open('author_list_for_learning.json', 'r') as f6:
         full_author_list_omim = json.load(f6)  
         
-    with open('training_data_dict.json', 'r') as f:
-        training_data_dict = json.load(f)
+    #with open('training_data_dict.json', 'r') as f:
+        #training_data_dict = json.load(f)
         
         
-    # used for first time to gathering the data
-    #training_data_dict = get_training_data(gene_review_training_dict, omim_dict)
+    #used for first time to gathering the data
+    training_data_dict = get_training_data(gene_review_training_dict, omim_dict)
     
     #get positive and negative sets
     #positive_set = build_positive_testing_set(training_data_dict)
