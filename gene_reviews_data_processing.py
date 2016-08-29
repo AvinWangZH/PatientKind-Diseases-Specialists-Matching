@@ -167,20 +167,3 @@ if __name__ == '__main__':
     
     num, count = num_no_pub(full_dict, omim_dict)
     
-    #for i in full_dict:
-        #for j in full_dict[i]['authors']:
-            #for k in j:
-                #if k.islower() and len(j) < 7:
-                    #print(k, len(j), j, i)
-            
-    
-    
-            
-            
-    #for i in full_dict:
-        #for j in full_dict[i]['authors']:
-            #if any(x in j for x in suffix_list):
-                #print(j)
-            
-    
-    #for i in full_dict:
