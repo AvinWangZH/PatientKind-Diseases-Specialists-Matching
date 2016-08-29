@@ -1,17 +1,3 @@
-"""
-==========================================
-One-class SVM with non-linear kernel (RBF)
-==========================================
-
-An example using a one-class SVM for novelty detection.
-
-:ref:`One-class SVM <svm_outlier_detection>` is an unsupervised
-algorithm that learns a decision function for novelty detection:
-classifying new data as similar or different to the training set.
-"""
-
-print(__doc__)
-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.font_manager
@@ -94,7 +80,6 @@ X_negative_val = np.delete(X_negative_val, 0, 0)
 X_positive_test = np.delete(X_positive_test, 0, 0)
 X_negative_test = np.delete(X_negative_test, 0, 0)
 
-
 n_error_train_list = []
 n_error_test_list = []
 n_error_outlier_list = []
@@ -147,36 +132,7 @@ for index, gamma_value in enumerate(value):
         print('F1 score is: %f' % F1)
         
         print('\n')
-
-'''
-xx, yy = np.meshgrid(np.linspace(-50, 50, 500), np.linspace(-50, 50, 500))
-# plot the line, the points, and the nearest vectors to the plane
-Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
-Z = Z.reshape(xx.shape)
-
-plt.title("Novelty Detection")
-
-
-b1 = plt.scatter(X_train[:, 0], X_train[:, 1], c='white')
-b2 = plt.scatter(X_test[:, 0], X_test[:, 1], c='green')
-c = plt.scatter(X_outlier[:, 0], X_outlier[:, 1], c='red')
-plt.axis('tight')
-plt.xlim((-50, 50))
-plt.ylim((-50, 50))
-plt.legend([ b1, b2, c],
-           ["training observations",
-            "new regular observations", "new abnormal observations"],
-           loc="upper left",
-           prop=matplotlib.font_manager.FontProperties(size=11))
-plt.xlabel(
-    "error train: %d/200 ; errors novel regular: %d/40 ; "
-    "errors novel abnormal: %d/40"
-    % (n_error_train, n_error_test, n_error_outlier))
-plt.show()
-'''
-
-
-
+        
 #-----------------------------------------------------Unused Code------------------------------------------------
 '''
 #1. get outlier data
@@ -202,4 +158,30 @@ for omim_id in training_data_dict:
 X_train = np.concatenate((X_full[1000:49999, 0:1], X_full[1000:49999, 4:]), axis=1)
 X_test = np.concatenate((X_full[1:1000, 0:1], X_full[1:1000, 4:]), axis=1)
 X_outlier = np.concatenate((X_outlier[1:1000, 0:1], X_outlier[1:1000, 4:]), axis=1) #2160
+'''
+
+'''
+xx, yy = np.meshgrid(np.linspace(-50, 50, 500), np.linspace(-50, 50, 500))
+# plot the line, the points, and the nearest vectors to the plane
+Z = clf.decision_function(np.c_[xx.ravel(), yy.ravel()])
+Z = Z.reshape(xx.shape)
+
+plt.title("Novelty Detection")
+
+b1 = plt.scatter(X_train[:, 0], X_train[:, 1], c='white')
+b2 = plt.scatter(X_test[:, 0], X_test[:, 1], c='green')
+c = plt.scatter(X_outlier[:, 0], X_outlier[:, 1], c='red')
+plt.axis('tight')
+plt.xlim((-50, 50))
+plt.ylim((-50, 50))
+plt.legend([ b1, b2, c],
+           ["training observations",
+            "new regular observations", "new abnormal observations"],
+           loc="upper left",
+           prop=matplotlib.font_manager.FontProperties(size=11))
+plt.xlabel(
+    "error train: %d/200 ; errors novel regular: %d/40 ; "
+    "errors novel abnormal: %d/40"
+    % (n_error_train, n_error_test, n_error_outlier))
+plt.show()
 '''
