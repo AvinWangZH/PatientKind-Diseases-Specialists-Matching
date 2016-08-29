@@ -9,8 +9,6 @@ def remove_lower(string):
     return new
 
 def transform_names_to_omim_format(full_dict):
-    
-    
     suffix_list = ['Jr', 'II', 'III', 'IV']
     
     for i in full_dict:
@@ -22,8 +20,7 @@ def transform_names_to_omim_format(full_dict):
     for i in full_dict:
         for j in range(len(full_dict[i]['authors'])):
             full_dict[i]['authors'][j] = full_dict[i]['authors'][j].split(' ')
-            
-            
+    
     #two cases: lowercase and suffix
     for i in full_dict:
         count = 0
@@ -55,7 +52,6 @@ def transform_names_to_omim_format(full_dict):
                             last_name = j[k]                        
                     k += 1
                     
-                
                 for k in range(len(j)):
                     if any(x in j for x in suffix_list):
                         if (not j[k].islower()) and (k != len(j) - 1) and (k != len(j) - 2):
@@ -73,22 +69,15 @@ def transform_names_to_omim_format(full_dict):
                             for l in range(k, len(j)):
                                 last_name += (j[l] + ' ')
                             break                        
-                    
+                        
                 if suffix != '':
                     name = last_name.strip() + ', ' + name.strip() + ', ' + suffix + '.'
                 else:
                     name = last_name.strip() + ', ' + name.strip()
             
-            #print(i)
-            #print(full_dict[i]['omimID_list'])
-            
             full_dict[i]['authors'][count] = name
-            #print(name)
-            #print('\n')
             
             count += 1
-            
-                         
     return 
 
 def num_with_no_omimID(gr_dict):
@@ -116,9 +105,7 @@ def num_no_pub(gr_dict, omim_dict):
     '''
     count = 0
     count1 = 0
-    
 
-    
     for disease in gr_dict:
         for omimID in gr_dict[disease]['omimID_list']:
             for author in gr_dict[disease]['authors']:
@@ -146,13 +133,6 @@ def get_omim_num(full_dict):
         count += len(full_dict[i]['omimID_list']) 
         
     return count
-            
-    
-    
-    
-
-
-
 
 if __name__ == '__main__':
 
