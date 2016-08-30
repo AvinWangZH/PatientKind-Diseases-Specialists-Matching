@@ -4,7 +4,6 @@ This python script has two functions:
 1. Scrape disease names and links from the main page of gene reviews website
 2. Crawl through all link to build gene review disease - OMIM id mappings
 """
-
 from urllib.request import Request, urlopen
 from bs4 import BeautifulSoup
 import pickle
@@ -12,34 +11,24 @@ import json
 import re
 import logging
 
-
 def read_json_file(filename, var_name):
-    
     with open(filename, 'r') as f:
         var_name = json.load(f)
-        
     return var_name
 
 def read_pickle_file(filename, var_name):
-    
     with open(filename, 'rb') as f:
         var_name = pickle.load(f)
-        
     return var_name
 
 def write_json_file(filename, var):
-    
     with open(filename, 'w') as f:
         json.dump(var, f)
-        
     return
 
-
 def write_pickle_file(filename, var):
-    
     with open(filename, 'wb') as f:
         pickle.dump(var, f)
-        
     return
 
 def build_gene_reviews_url_dict():
@@ -52,8 +41,6 @@ def build_gene_reviews_url_dict():
     
     Output: url_dict (dictionary): keys are urls and values are disease names
     '''
-    
-    
     #initialize variables which will be used in this program
     url_dict = {}      #key: links| value: disease names
     
@@ -61,10 +48,7 @@ def build_gene_reviews_url_dict():
     url = 'http://www.ncbi.nlm.nih.gov/books/NBK1116/'
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     bsObj = BeautifulSoup(urlopen(req).read(), 'lxml')
-    
-    
     elements = bsObj.findAll('a', {'class': 'toc-item'})
-    
     logging.info('Found {} articles in gene reviews'.format(654))
     
     #put all disease name and link into url_dict
@@ -73,7 +57,6 @@ def build_gene_reviews_url_dict():
         count += 1
         if count == total_num_disease:
             break
-    
     return url_dict
 
 def get_single_disease_omim_mapping(url):
@@ -85,7 +68,6 @@ def get_single_disease_omim_mapping(url):
     
     Output: omim_ids --- a list with all related omim ID in it
     '''
-    
     url = 'http://www.ncbi.nlm.nih.gov/' + url
     req = Request(url, headers={'User-Agent': 'Mozilla/5.0'})
     bsObj = BeautifulSoup(urlopen(req).read(), 'lxml')
@@ -105,7 +87,6 @@ def build_gene_reviews_disease_omimid_dict(url_dict):
     and omim Id mappings
     
     '''    
-    
     #Initialize gene_reviews_disease_omimid_dict to store gene reveiws and omim id data
     gene_reviews_disease_omimid_dict = {}
     
@@ -116,7 +97,6 @@ def build_gene_reviews_disease_omimid_dict(url_dict):
         
         id_list = []  #list of omim ids for the disease
         omim_id = get_single_disease_omim_mapping(i)
-        
         
         #check if a disease has a related omim id or not and fliter the unrelated data
         if omim_id != []:
@@ -131,17 +111,13 @@ def build_gene_reviews_disease_omimid_dict(url_dict):
     
     return gene_reviews_disease_omimid_dict
 
-
 def parse_args(args):
     from argparse import ArgumentParser
     description = __doc__.strip()
-    
     parser = ArgumentParser(description=description)
     parser.add_argument('urls_filename')
     parser.add_argument('disease_omim_map_filename')
-
     return parser.parse_args(args)
-
 
 def fetch_urls(urls_filename):
     if os.path.isfile(urls_filename):
@@ -156,7 +132,6 @@ def fetch_urls(urls_filename):
     
     return url_dict
 
-
 def fetch_disease_omim_map(url_dict, disease_omim_map_filename):
     if os.path.isfile(disease_omim_map_filename):
         logging.warning('File already exists: {}\nLoading previous omim mappings...'.format(disease_omim_map_filename))
@@ -170,12 +145,11 @@ def fetch_disease_omim_map(url_dict, disease_omim_map_filename):
         
     return gene_reviews_disease_omimid_dict
 
-
 def main(urls_filename, disease_omim_map_filename):
     url_dict = load_urls(urls_filename)
     gene_reviews_disease_omimid_dict = fetch_disease_omim_map(url_dict, disease_omim_map_filename)
     
-
+    
 if __name__ == '__main__':
     args = parse_args(args)
     logging.basicConfig(level='INFO')
