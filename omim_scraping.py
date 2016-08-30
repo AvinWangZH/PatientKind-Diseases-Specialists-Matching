@@ -54,7 +54,6 @@ def omim_reference_scrape_full():
     for entry in entry_list:
         if entry['entry']['status'] == 'live':
             new_entry_list.append(entry)    
-            
     return new_entry_list
         
 def name_parsing(author_name):
@@ -79,7 +78,6 @@ def name_parsing(author_name):
     return name_list
         
 def rearrange_omim_info(entry_list):
-    
     '''
     This function is used to rearrange the data in the omim dictionary.
     The data in the new dictionary ('omim_full_dict.json') has a format of
@@ -98,7 +96,6 @@ def rearrange_omim_info(entry_list):
     output: None
                 
     '''
-    
     omim_dict = {}
     count1 = 1
     
@@ -114,7 +111,6 @@ def rearrange_omim_info(entry_list):
                 pub_dict[pub['reference']['pubmedID']]['authors'] = pub_dict[pub['reference']['pubmedID']]['authors'].split(', ')
                 pub_dict[pub['reference']['pubmedID']]['authors'] = name_parsing(pub_dict[pub['reference']['pubmedID']]['authors'])
         omim_dict[entry['entry']['mimNumber']]['pubList'] = pub_dict
-    
     return omim_dict
 
 def journal_date_parse(string):
@@ -143,7 +139,6 @@ def get_journal_dist(omim_dict):
     input: None
     output: journal_distribution: a Counter object with sorted journal data
     '''
-        
     journal_list = []
     for omim in omim_dict:
         for pub in omim_dict[omim]['pubList']:
@@ -153,19 +148,15 @@ def get_journal_dist(omim_dict):
                 journal_list.append(journal[0])
                 
     journal_distribution = Counter(journal_list)
-    
     return journal_distribution
-
-
+    
 def get_date_dist(omim_dict):
     '''
     This function is used to get the districution of publication years.
     input: None
     output: date_distribution: a Counter object with sorted year data
     '''
-        
     date_list = []
-    
     for omim in omim_dict:
         for pub in omim_dict[omim]['pubList']:
             journal = []
@@ -175,10 +166,8 @@ def get_date_dist(omim_dict):
                 
     date_distribution = Counter(date_list)
     return date_distribution
-    
 
 def get_name_dist(omim_dict):
-    
     name_list = []
     suffix_list = ['Jr.', 'I', 'II', 'III', 'IV']  
         
@@ -224,22 +213,16 @@ def build_author_omimID_mat(author_list, disease_list, omim_dict):
                 if author_index is not None:
                     #print("Found")
                     author_omimID_mat[author_index][disease_index] += 1
-                
     return author_omimID_mat
 
-
 def get_author_omimID_mat(omim_dict):
-        
     with open('abandon_list.json', 'r') as file:
         abandon_list = json.load(file)
      
     omimID_list = get_omimID_list(omim_dict)
     author_list = get_author_list(omim_dict)
-        
     mat = build_author_omimID_mat(author_list, omimID_list, omim_dict)
-    
     return mat, author_list, omimID_list
-
 
 
 if __name__ == '__main__':
