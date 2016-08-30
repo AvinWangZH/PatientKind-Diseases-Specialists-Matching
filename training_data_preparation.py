@@ -276,16 +276,9 @@ if __name__ == '__main__':
     with open('author_list_for_learning.json', 'r') as f6:
         full_author_list_omim = json.load(f6)  
         
-    #with open('training_data_dict.json', 'r') as f:
-        #training_data_dict = json.load(f)
-        
     #used for first time to gathering the data
     training_data_dict = get_training_data(gene_review_training_dict, omim_dict)
     
     #get positive and negative sets
-    #positive_set = build_positive_testing_set(training_data_dict)
-    #negative_set = build_negative_set(training_data_dict)
-
-    
-        
-    
+    positive_set = build_positive_testing_set(training_data_dict)
+    negative_set = build_negative_set(training_data_dict)
