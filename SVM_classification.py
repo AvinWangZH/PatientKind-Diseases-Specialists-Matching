@@ -7,7 +7,6 @@ import logging
 import seaborn as sns
 from sklearn.cross_validation import KFold
 
-
 with open('training_data_dict_new.json', 'r') as f:
     training_data_dict = json.load(f)
     
@@ -17,7 +16,6 @@ with open('positive_set_new.json', 'r') as f:
 with open('negative_set_new.json', 'r') as f:
     negative_set_temp = json.load(f)
     
-
 positive_set = []
 positive_set_names_temp = []
 for entry in positive_set_temp:
@@ -31,7 +29,6 @@ for entry in negative_set_temp:
     negative_set.append(entry[:-2])
     negative_set_names_temp.append((entry[-2], entry[-1]))
 negative_set = np.array(negative_set)
-
 
 logging.basicConfig(level='INFO')
 np.random.seed(1)
@@ -80,7 +77,6 @@ for row_num in negative_val_row_num:
 X_negative_val = np.array(X_negative_val)
 logging.info('X_negative_val has been finished')
 
-  
 count = 1  
 for row_num in positive_test_row_num:
     if not np.any(np.isnan(positive_set[row_num, :])):
@@ -103,14 +99,6 @@ for row_num in negative_test_row_num:
 X_negative_test = np.array(X_negative_test)
 logging.info('X_negative_test has been finished')
 
-#for row_num in negative_training_row_num:
-    #if not np.any(np.isnan(negative_set[row_num, :])):
-        #X_train.append(list(np.concatenate((negative_set[row_num, 0:1], negative_set[row_num, 4:]), axis=0)))
-        #X_train_names.append(negative_set_names_temp[row_num])
-#X_train = np.array(X_train)
-#logging.info('X_train has been finished')
-
-
 # generate training set
 n_samples = X_positive_val.shape[0] + X_negative_val.shape[0] + X_positive_test.shape[0] + X_negative_test.shape[0]
 X = np.vstack((X_positive_val, X_negative_val, X_positive_test, X_negative_test))
@@ -124,7 +112,6 @@ a.extend(b)
 a.extend(c)
 a.extend(d)
 labels = np.array(a)
-
 
 fp_rate_mean_list = []
 fn_rate_mean_list = []
@@ -152,7 +139,6 @@ for num in random_state_num:
         X_train, X_test = X[train_index], X[test_index]
         y_train, y_test = labels[train_index], labels[test_index]
         
-    
         clf = SVC(probability=True)
         clf.fit(X_train, y_train) 
                 
@@ -226,14 +212,6 @@ logging.info('Precision: {}'.format(np.array(prec_mean_list).mean()))
 logging.info('Recall: {}'.format(np.array(rec_mean_list).mean()))
 logging.info('F1: {}'.format(np.array(F1_mean_list).mean()))
 print('\n')
-    
-    
-        
-    
-    
-    #pos_test = clf.predict_proba(X_positive_test)
-    #neg_test = clf.predict_proba(X_negative_test)
-    #left = clf.predict_proba(X_train)
 
 #-----------------------------------Graphing----------------------------------
 #f, axarr = plt.subplots(2, 2)
