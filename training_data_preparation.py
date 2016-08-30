@@ -33,48 +33,6 @@ def get_omimID_author_label(author_list, omimID_list, training_dict):
             if author_list[i] in training_dict[omimID_list[j]]['authors'].keys():
                 mat[i][j] = 1
     return mat
-
-def get_feature_mat(author_list, omimID_list, training_dict, author_omimID_full_mat):
-    mat = np.zeros((len(author_list), len(omimID_list), 3))
-    
-    # Feature #1: number of publications of each author on each disease
-    for i in range(len(author_list)):
-        for j in range(len(omimID_list)):
-            if author_list[i] in training_dict[omimID_list[j]]['authors'].keys():
-                mat[i][j][0] = training_dict[omimID_list[j]]['authors'][author_list[i]]
-    '''    
-    for author_i, author in enumerate(author_list):
-        for omim_i, omim_id in enumerate(omimID_list):
-            pub_counts = training_dict[omim_id]['authors']
-            if author in pub_counts:
-                mat[author_i][omim_i][0] = pub_counts[author] 
-    '''
-    #Remove the duplicate names and redundant content
-                
-    # Feature #2: number of publications the author has in total
-    for i in range(len(author_list)):
-        print(i)
-        author_index = full_author_list.index(author_list[i])
-        mat[i][0][1] =  author_omimID_full_mat.getrow(author_index).sum()  
-        
-    for i in range(len(author_list)):
-        for j in range(len(omimID_list)):
-            mat[i][j][1] = mat[i][0][1]
-            
-    # Feature #3: number of disease the author published papers
-    for i in range(len(author_list)):
-        print(i)
-        author_index = full_author_list.index(author_list[i])
-        count = 0
-        for j in author_omimID_full_mat.getrow(author_index).toarray()[0]:
-            if j != 0:
-                count += 1
-        mat[i][0][2] = count
-        
-    for i in range(len(author_list)):
-        for j in range(len(omimID_list)):
-            mat[i][j][2] = mat[i][0][2]    
-    return mat
               
 def get_num_experts(mat):
     count = 0
