@@ -139,30 +139,3 @@ if __name__ == '__main__':
     url = get_paper_url_byID(author_info['Agatino Battaglia']['Publications'])
     f2 = opener.open(url)
     content = str(f2.read())    
-    
-    
-    
-    #file_813 = pickle.load(open('articles.p', 'rb'))
-    
-    
-        
-    
-    #first = info['Agatino Battaglia']['Publications']
-    
-    #for item in first:
-        #if item in file_813.keys():
-            #print('yes')
-        #else:
-            #print('no')
-
-                                    
-
-    
-
-    
-    
-
- 
-            
-            
-    
