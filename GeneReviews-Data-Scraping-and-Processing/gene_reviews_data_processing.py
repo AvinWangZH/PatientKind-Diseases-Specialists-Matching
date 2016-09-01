@@ -27,20 +27,16 @@ def transform_names_to_omim_format(full_dict):
     
     output: full_dict: full gene reviews dictionary after name transformation
     '''
-    
     suffix_list = ['Jr', 'II', 'III', 'IV']
-    
     for i in full_dict:
         if ',' in full_dict[i]['authors']:
             full_dict[i]['authors'] = full_dict[i]['authors'].replace('and ', '').strip('.').split(', ')
         else:
             full_dict[i]['authors'] = full_dict[i]['authors'].replace(' and', ',').strip('.').split(', ')
-            
     for i in full_dict:
         for j in range(len(full_dict[i]['authors'])):
             full_dict[i]['authors'][j] = full_dict[i]['authors'][j].split(' ')
-            
-            
+ 
     #two cases: lowercase and suffix
     for i in full_dict:
         count = 0
@@ -54,10 +50,8 @@ def transform_names_to_omim_format(full_dict):
                     if any(x in j for x in suffix_list):
                         if (not j[k].islower()) and (k != len(j) - 1) and (k != len(j) - 2):
                             j[k] = remove_lower(j[k])
-                           
                             if len(j[k]) >= 2 and '-' not in j[k]:
                                 j[k] = '. '.join(j[k]).strip()
-                                
                         elif k == len(j) -2:
                             last_name = j[k]
                         else:
@@ -67,12 +61,10 @@ def transform_names_to_omim_format(full_dict):
                             j[k] = remove_lower(j[k])
                             if len(j[k]) >= 2 and '-' not in j[k]:
                                 j[k] = '. '.join(j[k]).strip()
-                                
                         elif k == len(j) - 1:
                             last_name = j[k]                        
                     k += 1
                     
-                
                 for k in range(len(j)):
                     if any(x in j for x in suffix_list):
                         if (not j[k].islower()) and (k != len(j) - 1) and (k != len(j) - 2):
@@ -95,14 +87,11 @@ def transform_names_to_omim_format(full_dict):
                     name = last_name.strip() + ', ' + name.strip() + ', ' + suffix + '.'
                 else:
                     name = last_name.strip() + ', ' + name.strip()
-            
             #print(i)
             #print(full_dict[i]['omimID_list'])
-            
             full_dict[i]['authors'][count] = name
             #print(name)
             #print('\n')
-            
             count += 1
     return full_dict
 
@@ -114,13 +103,11 @@ def num_with_no_omimID(full_dict):
     '''
     count = 0
     list_no_related = []
-    
     for i in full_dict:
         if full_dict[i]['omimID_list'] == []:
             count += 1
             list_no_related.append(i)
             print(i)  
-            
     return list_no_related
 
 def num_no_pub(gr_dict, omim_dict):
@@ -136,9 +123,6 @@ def num_no_pub(gr_dict, omim_dict):
     name = []
     disease_name = []
     training_dict = {}
-    
-
-    
     for disease in gr_dict:
         for omimID in gr_dict[disease]['omimID_list']:
             for author in gr_dict[disease]['authors']:
@@ -157,43 +141,24 @@ def num_no_pub(gr_dict, omim_dict):
                                     training_dict[omimID]['authors'][author] = 1
                                 else:
                                     training_dict[omimID]['authors'][author] += 1                            
-                            
                     if flag == 0:
                         count += 1
-                    else:
-                        print(disease)  
-                        print(omimID)
-                        print(author)
-                        #if omimID not in training_dict:
-                            #training_dict[omimID] = {'authors': {author: 1}, 'disease': disease}
-                        #else:
-                            #if author not in training_dict[omimID]['authors'].keys():
-                                #training_dict[omimID]['authors'][author] = 1
-                            #else:
-                                #training_dict[omimID]['authors'][author] += 1
-                        
                 except KeyError:
                     pass
                 if count3 != 0:
                     count2.append(count3)
                     name.append(author)
                     disease_name.append(omimID)
-    
-                    
     return count, count1, count2, name, disease_name, training_dict
 
 def get_omim_num(full_dict):
     count = 0
-    
     for i in full_dict:
         count += len(full_dict[i]['omimID_list']) 
-        
     return count
 
 def get_initial_gene_review_training_dict(gr_dict, omim_dict):
-    
     training_dict = {}
-    
     for disease in gr_dict:
         for omimID in gr_dict[disease]['omimID_list']:
             for author in gr_dict[disease]['authors']:
@@ -209,8 +174,6 @@ def get_initial_gene_review_training_dict(gr_dict, omim_dict):
                                     training_dict[omimID]['authors'][author] += 1  
                 except KeyError:
                     pass                    
-    
-    
     return training_dict
             
     
