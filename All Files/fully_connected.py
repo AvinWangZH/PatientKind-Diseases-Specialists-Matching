@@ -421,18 +421,18 @@ temp_pos = y_pos_full_pred[:, 0]
 temp_pos = sorted(list(temp_pos))
 temp_pos.reverse()
 q1_pos = temp_pos[0]
-q2_pos = temp_pos[539]
-q3_pos = temp_pos[539+540]
-q4_pos = temp_pos[539+540+540]
+q2_pos = temp_pos[int(len(temp_pos)/4)]
+q3_pos = temp_pos[int(len(temp_pos)/2)]
+q4_pos = temp_pos[int(len(temp_pos)*3/4)]
 q5_pos = temp_pos[-1]
 
 temp_neg = y_neg_full_pred[:, 0]
 temp_neg = sorted(list(temp_neg))
 temp_neg.reverse()
 q1_neg = temp_neg[0]
-q2_neg = temp_neg[int(206950/4)]
-q3_neg = temp_neg[int(206950/2)]
-q4_neg = temp_neg[int(206950/4*3)]
+q2_neg = temp_neg[int(len(temp_neg)/4)]
+q3_neg = temp_neg[int(len(temp_neg)/2)]
+q4_neg = temp_neg[int(len(temp_neg)*3/4)]
 q5_neg = temp_neg[-1]
  
  
