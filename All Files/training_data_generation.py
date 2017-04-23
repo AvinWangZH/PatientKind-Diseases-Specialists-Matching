@@ -16,9 +16,21 @@ from collections import Counter
 import logging
 import re
 
-def get_training_data(gene_review_training_dict, omim_dict, full_author_list, full_omimID_list):
+def get_training_data(gene_review_training_dict, omim_dict, full_author_list_omim, full_omimID_list):
     training_data_dict = {} #key: OMIM Ids, value: training data
     other_data_dict = {} #key: OMIM Ids, value: total # of pub for that disease
+    author_omim_lookup = {} #key: author, value: index in full_author_list_omim
+    author_diseases_with_paper = [] #key: author index, value: number of diseases with 1+ paper
+
+    # prepare author lookup and author diseases with paper lookup
+    for index, author in enumerate(full_author_list_omim):
+        assert author not in author_omim_lookup
+        author_omim_lookup[author] = index
+
+    # get number of non-zero entries per row, which corresponds to the number of
+    # diseases each author has published on
+    author_diseases_with_paper = (author_omimID_full_mat > 0).sum(1).ravel().tolist()[0]
+
     #count every authors publications in related OMIM ids
     for omim_id in gene_review_training_dict:
         full_author_list = []
@@ -64,15 +76,12 @@ def get_training_data(gene_review_training_dict, omim_dict, full_author_list, fu
                 training_data_dict[omim_id][author].append(0)
             
     #feature 6: num of disease the author has publications on
-    count = 0
     for omim_id in training_data_dict:
         for author in training_data_dict[omim_id]:
-            index = full_author_list_omim.index(author)
-            num_disease_with_paper = author_omimID_full_mat.getrow(index).size
+            index = author_omim_lookup[author]
+            num_disease_with_paper = author_diseases_with_paper[index]
             training_data_dict[omim_id][author].append(num_disease_with_paper)
-            print(count)
-            count += 1
-    
+
     #feature 7&8: number of publications as first author/last author
     for omim_id in training_data_dict:
         first_last_author_dict = {}
