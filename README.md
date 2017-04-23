@@ -12,3 +12,6 @@ on their publication record. We compared the performance of three methods on
 a dataset of 209,110 disease-author associations, and were able to classify rare
 disease experts from GeneReviews with 76% accuracy and predict 21,224 new
 disease-expert associations.
+
+Running the program, you can follow the order:
+GeneReviews_Scraping.py -> GeneReviews_Preprocessing.py -> OMIM_Scraping.py -> training_data_generation.py -> Different Learning Algorithms
