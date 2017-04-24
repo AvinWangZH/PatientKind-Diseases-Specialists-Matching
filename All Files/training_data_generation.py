@@ -16,6 +16,9 @@ from collections import Counter
 import logging
 import re
 
+# Recency of publications is assessed relative to this year
+CURRENT_YEAR = 2016
+
 def get_training_data(gene_review_training_dict, omim_dict, full_author_list_omim, full_omimID_list):
     training_data_dict = {} #key: OMIM Ids, value: training data
     other_data_dict = {} #key: OMIM Ids, value: total # of pub for that disease
@@ -37,7 +40,7 @@ def get_training_data(gene_review_training_dict, omim_dict, full_author_list_omi
         total_num_pub = len(omim_dict[omim_id]['pubList'])
         for pubmed_id in sorted(omim_dict[omim_id]['pubList']):
             full_author_list.extend(omim_dict[omim_id]['pubList'][pubmed_id]['authors'])
-        
+
         full_author_pub_count = dict(Counter(full_author_list))
         other_data_dict[omim_id] = total_num_pub
         training_data_dict[omim_id] = full_author_pub_count
@@ -45,22 +48,22 @@ def get_training_data(gene_review_training_dict, omim_dict, full_author_list_omi
     for omim_id in sorted(training_data_dict):
         for author in sorted(training_data_dict[omim_id]):
             training_data_dict[omim_id][author] = [training_data_dict[omim_id][author]]
-    
+
     #feature 2: add number of authors who published in the OMIM id
     for omim_id in sorted(training_data_dict):
         author_num = len(training_data_dict[omim_id])
         for author in sorted(training_data_dict[omim_id]):
             training_data_dict[omim_id][author].append(author_num)
-    
-    
+
+
     #feature 3&4: add total publication in the OMIM id and percentage of author pub in that OMIM id pub pool
     for omim_id in sorted(training_data_dict):
         for author in sorted(training_data_dict[omim_id]):
             personal_pub = training_data_dict[omim_id][author][0]
             training_data_dict[omim_id][author].append(other_data_dict[omim_id])
             training_data_dict[omim_id][author].append(personal_pub/other_data_dict[omim_id])
-    
-    
+
+
     #feature 5: add normalized publication number for each author (with 0 std, nan instead --> label as 0)
     for omim_id in sorted(training_data_dict):
         pub_num_list = []
@@ -71,10 +74,10 @@ def get_training_data(gene_review_training_dict, omim_dict, full_author_list_omi
         std = np.std(pub_num_arr)
         for author in sorted(training_data_dict[omim_id]):
             if std != 0:
-                training_data_dict[omim_id][author].append((training_data_dict[omim_id][author][0]-mean)/std)
+                training_data_dict[omim_id][author].append((training_data_dict[omim_id][author][0] - mean) / std)
             else:
                 training_data_dict[omim_id][author].append(0)
-            
+
     #feature 6: num of disease the author has publications on
     for omim_id in sorted(training_data_dict):
         for author in sorted(training_data_dict[omim_id]):
@@ -126,11 +129,11 @@ def get_training_data(gene_review_training_dict, omim_dict, full_author_list_omi
                 pub_year = int(omim_dict[omim_id]['pubList'][pub]['journal'].replace(' .', '')[-5:-1])
 
             pub_year_index = None
-            if 2016 - pub_year < 3:
+            if CURRENT_YEAR - pub_year < 3:
                 pub_year_index = 0
-            elif 2016 - pub_year < 5:
+            elif CURRENT_YEAR - pub_year < 5:
                 pub_year_index = 1
-            elif 2016 - pub_year < 10:
+            elif CURRENT_YEAR - pub_year < 10:
                 pub_year_index = 2
 
             if pub_year_index is not None:
@@ -139,10 +142,10 @@ def get_training_data(gene_review_training_dict, omim_dict, full_author_list_omi
 
         for author in sorted(training_data_dict[omim_id]):
             #print(pub_year_count[author])
-            training_data_dict[omim_id][author].extend(pub_year_count[author]) 
-            
+            training_data_dict[omim_id][author].extend(pub_year_count[author])
+
     #feature 12&13&14: number of publications in top 3, 5, 10 Bio venues
-    source_re = re.compile(r'((?:[a-zA-Z\s\.]+)+).+(\d{4}).*')  
+    source_re = re.compile(r'((?:[a-zA-Z\s\.]+)+).+(\d{4}).*')
     bio_journal_list = [ 'New Eng. J. Med.', 'Lancet', 'Cell', 'Proc. Nat. Acad. Sci.', 'J. Clin. Oncol.', 'JAMA', 'Nature Genet.', 'Circulation', 'J. Am. Coll. Cardiol.', 'PLoS One']
     for omim_id in sorted(training_data_dict):
         pub_journal_count = {}
@@ -150,7 +153,7 @@ def get_training_data(gene_review_training_dict, omim_dict, full_author_list_omi
             pub_journal_count[author] = [0, 0, 0]
         for pub in sorted(omim_dict[omim_id]['pubList']):
             string = omim_dict[omim_id]['pubList'][pub]['journal']
-            match = source_re.match(string) 
+            match = source_re.match(string)
             journal = match.group(1).strip()
             pub_journal_index = None
             if journal in bio_journal_list[:3]:
@@ -166,8 +169,8 @@ def get_training_data(gene_review_training_dict, omim_dict, full_author_list_omi
 
         for author in sorted(training_data_dict[omim_id]):
             #print(pub_journal_count[author])
-            training_data_dict[omim_id][author].extend(pub_journal_count[author])             
-  
+            training_data_dict[omim_id][author].extend(pub_journal_count[author])
+
     #feature 15&16&17: number of publications in top 3, 5, 10 Gene venues
     genet_journal_list = ['Nature Genet.', 'Nature Rev. Genet.', 'PLoS Genet.', 'Genome Res.', 'Oncogene', 'Genome Biol.', 'Am. J. Hum Genet.', 'Hum. Molec. Genet.', 'BMC Genet.', 'Genetics']
 
@@ -193,8 +196,8 @@ def get_training_data(gene_review_training_dict, omim_dict, full_author_list_omi
 
         for author in sorted(training_data_dict[omim_id]):
             #print(pub_journal_count[author])
-            training_data_dict[omim_id][author].extend(pub_journal_count[author])      
-    
+            training_data_dict[omim_id][author].extend(pub_journal_count[author])
+
     #feature 18&19: number of publications in Nature or Science
     two_best_journals = ['Nature', 'Science']
     for omim_id in sorted(training_data_dict):
@@ -203,8 +206,8 @@ def get_training_data(gene_review_training_dict, omim_dict, full_author_list_omi
             pub_journal_count[author] = [0]
         for pub in sorted(omim_dict[omim_id]['pubList']):
             string = omim_dict[omim_id]['pubList'][pub]['journal']
-            match = source_re.match(string) 
-            journal = match.group(1).strip()            
+            match = source_re.match(string)
+            journal = match.group(1).strip()
             if journal in two_best_journals:
                 for author in sorted(omim_dict[omim_id]['pubList'][pub]['authors']):
                     pub_journal_count[author][0] += 1
@@ -231,7 +234,7 @@ def build_positive_set(training_data_dict):
 
     logging.info('{} number of positive examples'.format(count))
     return positive_testing_set
-    
+
 def build_negative_set(training_data_dict):
     negative_set = []
     count = 0
@@ -249,29 +252,29 @@ if __name__ == '__main__':
     logging.basicConfig(level='INFO')
 
     with open('omim_dict.json', 'r') as f2:
-        omim_dict = json.load(f2)    
-    
+        omim_dict = json.load(f2)
+
     with open('gene_reviews_training_dict.json', 'r') as f3:
         gene_review_training_dict = json.load(f3)
-        
+
     with open('author_omimID_mat_coo.p', 'rb') as f4:
         author_omimID_full_mat = pickle.load(f4)
-        
+
     with open('omimID_list.json', 'r') as f5:
-        full_omimID_list_omim = json.load(f5)    
-    
+        full_omimID_list_omim = json.load(f5)
+
     with open('author_list.json', 'r') as f6:
-        full_author_list_omim = json.load(f6)  
-        
+        full_author_list_omim = json.load(f6)
+
     #used for first time to gathering the positive data
     training_data_dict = get_training_data(gene_review_training_dict, omim_dict, full_author_list_omim, full_omimID_list_omim)
-    
+
     #get positive and negative sets
     positive_set = build_positive_set(training_data_dict)
     negative_set = build_negative_set(training_data_dict)
-    
+
     with open('positive_set.json', 'w') as f:
         json.dump(positive_set, f)
-    
+
     with open('negative_set.json', 'w') as f:
-        json.dump(negative_set, f)    
+        json.dump(negative_set, f)
